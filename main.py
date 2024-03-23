@@ -17,6 +17,7 @@ HTTP_HOST = '0.0.0.0'
 SOCKET_HOST = '127.0.0.1'
 SOCKET_PORT = 5000
 
+# Налаштовуємо логування в процесах
 logger = logging.getLogger()
 stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
@@ -64,22 +65,29 @@ class CatFramework(BaseHTTPRequestHandler):
         with open(filename, "rb") as f:
             self.wfile.write(f.read())
 
+
 def save_data(data):
     client = MongoClient(URI)
     db = client.homework
     parse_data = unquote_plus(data.decode())
     try:
+        # Оброблюємо дані з форми message.html
         parse_data = {key: value for key, value in [el.split("=") for el in parse_data.split("&")]}
+
+        # Додаємо дату та час відправлення
         current_datetime = datetime.now()
         parse_data["date"] = str(current_datetime)
+        
         db.messages.insert_one(parse_data)
         logging.info(f"Server saved:{parse_data}")
+    
     except ValueError as e:
         logging.error(f"Parse error: {e}")
     except Exception as e:
         logging.error(f"Failed to save: {e}")
     finally:
         client.close()
+
 
 def run_http_server():
     httpd = HTTPServer((HTTP_HOST, HTTP_PORT), CatFramework)
