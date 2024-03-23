@@ -69,9 +69,9 @@ def save_data(data):
     db = client.homework
     parse_data = unquote_plus(data.decode())
     try:
-        # logging.info(f"Message data:{parse_data}")
         parse_data = {key: value for key, value in [el.split("=") for el in parse_data.split("&")]}
-        parse_data["date"] = str(datetime.now())
+        current_datetime = datetime.now()
+        parse_data["date"] = str(current_datetime)
         db.messages.insert_one(parse_data)
         logging.info(f"Server saved:{parse_data}")
     except ValueError as e:
@@ -108,8 +108,11 @@ def run_socket_server():
         sock.close()
 
 def main():
-    thhp_process = Process(target=run_http_server, name="http_server")
-    thhp_process.start()
+    # HTTP-сервер, порт 3000
+    http_process = Process(target=run_http_server, name="http_server")
+    http_process.start()
+    
+    # Socket-сервер, порт 5000
     socket_process = Process(target=run_socket_server, name="socket_server")
     socket_process.start()
 
